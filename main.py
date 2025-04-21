@@ -149,7 +149,7 @@ def crop_to_vertical(image):
     
     return cropped
 
-def create_video_from_images(input_folder, output_video, fps=30, image_duration_ms=1000):
+def create_video_from_images(input_folder, output_video, fps=30, image_duration_ms=1000, video_format='mp4'):
     images = [img for img in os.listdir(input_folder) if img.endswith(('.png', '.jpg', '.jpeg'))]
     images.sort()
     
@@ -167,7 +167,21 @@ def create_video_from_images(input_folder, output_video, fps=30, image_duration_
     # Получаем размеры после обрезки
     height, width = first_image.shape[:2]
     
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # Выбираем кодек в зависимости от формата
+    if video_format.lower() == 'mp4':
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')  # H.264 кодек
+    elif video_format.lower() == 'avi':
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')  # XVID кодек
+    elif video_format.lower() == 'mov':
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # MPEG-4 кодек
+    else:
+        print(f"Неподдерживаемый формат видео: {video_format}. Используется MP4.")
+        fourcc = cv2.VideoWriter_fourcc(*'avc1')
+    
+    # Добавляем расширение файла, если его нет
+    if not output_video.lower().endswith(f'.{video_format.lower()}'):
+        output_video = f"{output_video}.{video_format.lower()}"
+    
     video = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
     
     frames_per_image = int((image_duration_ms / 1000) * fps)
@@ -195,8 +209,9 @@ def create_video_from_images(input_folder, output_video, fps=30, image_duration_
 
 if __name__ == "__main__":
     input_folder = "gallery"  # Папка с фотографиями
-    output_video = "output_video.mp4"  # Имя выходного видео файла
+    output_video = "output_video"  # Имя выходного видео файла (без расширения)
     fps = 30  # Количество кадров в секунду
-    image_duration_ms = 1_000  # Длительность показа каждого изображения в миллисекундах
+    image_duration_ms = 1000  # Длительность показа каждого изображения в миллисекундах
+    video_format = 'mp4'  # Формат видео (mp4, avi, mov)
     
-    create_video_from_images(input_folder, output_video, fps, image_duration_ms)
+    create_video_from_images(input_folder, output_video, fps, image_duration_ms, video_format)
