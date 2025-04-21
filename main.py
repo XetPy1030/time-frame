@@ -1,9 +1,9 @@
-import cv2
 import os
-from PIL import Image
-import numpy as np
-import time
 from datetime import datetime
+
+import cv2
+import numpy as np
+
 
 def get_file_creation_time(file_path):
     # Получаем время последнего изменения файла
