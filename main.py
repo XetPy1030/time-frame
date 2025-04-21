@@ -125,47 +125,71 @@ def add_text_to_image(image, text):
     
     return img
 
+def crop_to_vertical(image):
+    height, width = image.shape[:2]
+    
+    # Определяем желаемое соотношение сторон (9:16)
+    target_ratio = 9/16
+    
+    # Вычисляем новую ширину, сохраняя высоту
+    new_width = int(height * target_ratio)
+    
+    # Если текущая ширина меньше нужной, увеличиваем изображение
+    if width < new_width:
+        scale = new_width / width
+        image = cv2.resize(image, (new_width, int(height * scale)))
+        height, width = image.shape[:2]
+    
+    # Вычисляем координаты для обрезки по центру
+    start_x = (width - new_width) // 2
+    end_x = start_x + new_width
+    
+    # Обрезаем изображение
+    cropped = image[:, start_x:end_x]
+    
+    return cropped
+
 def create_video_from_images(input_folder, output_video, fps=30, image_duration_ms=1000):
-    # Получаем список всех изображений в папке
     images = [img for img in os.listdir(input_folder) if img.endswith(('.png', '.jpg', '.jpeg'))]
-    images.sort()  # Сортируем изображения по имени
+    images.sort()
     
     if not images:
         print("В папке нет изображений!")
         return
     
-    # Получаем размер первого изображения
+    # Загружаем первое изображение для определения размера
     first_image = cv2.imread(os.path.join(input_folder, images[0]))
-    height, width, layers = first_image.shape
     
-    # Создаем объект VideoWriter
+    # Центрируем и обрезаем первое изображение
+    first_image = center_image_on_face(first_image)
+    first_image = crop_to_vertical(first_image)
+    
+    # Получаем размеры после обрезки
+    height, width = first_image.shape[:2]
+    
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
     
-    # Рассчитываем количество кадров для каждого изображения
     frames_per_image = int((image_duration_ms / 1000) * fps)
     
-    # Добавляем каждое изображение в видео
     for image in images:
         img_path = os.path.join(input_folder, image)
         frame = cv2.imread(img_path)
         
-        # frame = debug_face_detection(frame)
+        # Центрируем изображение по лицу
         frame = center_image_on_face(frame)
-
-        # Получаем дату создания файла
-        creation_time = get_file_creation_time(img_path)
         
-        # Добавляем текст с датой на изображение
+        # Обрезаем изображение под вертикальный формат
+        frame = crop_to_vertical(frame)
+        
+        creation_time = get_file_creation_time(img_path)
         frame_with_text = add_text_to_image(frame, creation_time)
         
-        # Добавляем изображение несколько раз для нужной длительности
         for _ in range(frames_per_image):
             video.write(frame_with_text)
         
         print(f"Обработано изображение: {image} ({creation_time})")
     
-    # Закрываем видео
     video.release()
     print(f"Видео успешно создано: {output_video}")
 
