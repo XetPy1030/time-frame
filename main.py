@@ -11,6 +11,85 @@ def get_file_creation_time(file_path):
     # Конвертируем в читаемый формат (только дата)
     return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
 
+def debug_face_detection(image):
+    # Загружаем классификатор для обнаружения лиц
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    
+    # Конвертируем изображение в оттенки серого
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Обнаруживаем лица
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    
+    print(f"Найдено лиц: {len(faces)}")
+    
+    # Создаем копию изображения для рисования
+    debug_image = image.copy()
+    
+    for (x, y, w, h) in faces:
+        # Вычисляем центр лица
+        center_x = x + w // 2
+        center_y = y + h // 2
+        
+        # Рисуем красный крест
+        cross_size = 20
+        color = (0, 0, 255)  # Красный цвет в формате BGR
+        thickness = 2
+        
+        # Горизонтальная линия
+        cv2.line(debug_image, 
+                (center_x - cross_size, center_y), 
+                (center_x + cross_size, center_y), 
+                color, thickness)
+        
+        # Вертикальная линия
+        cv2.line(debug_image, 
+                (center_x, center_y - cross_size), 
+                (center_x, center_y + cross_size), 
+                color, thickness)
+        
+        # Рисуем прямоугольник вокруг лица
+        cv2.rectangle(debug_image, (x, y), (x + w, y + h), color, thickness)
+    
+    return debug_image
+
+def center_image_on_face(image):
+    # Загружаем классификатор для обнаружения лиц
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    
+    # Конвертируем изображение в оттенки серого
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Обнаруживаем лица
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    
+    if len(faces) > 0:
+        # Находим лицо с наибольшим размером
+        largest_face = max(faces, key=lambda face: face[2] * face[3])  # face[2] - ширина, face[3] - высота
+        (x, y, w, h) = largest_face
+        
+        # Получаем размеры изображения
+        height, width = image.shape[:2]
+        
+        # Вычисляем центр лица
+        face_center_x = x + w // 2
+        face_center_y = y + h // 2
+        
+        # Вычисляем смещение для центрирования
+        shift_x = width // 2 - face_center_x
+        shift_y = height // 2 - face_center_y
+        
+        # Создаем матрицу преобразования
+        M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+        
+        # Применяем аффинное преобразование
+        centered_image = cv2.warpAffine(image, M, (width, height))
+        
+        return centered_image
+    else:
+        # Если лицо не найдено, возвращаем оригинальное изображение
+        return image
+
 def add_text_to_image(image, text):
     # Конвертируем изображение в формат для OpenCV
     if isinstance(image, np.ndarray):
@@ -71,6 +150,9 @@ def create_video_from_images(input_folder, output_video, fps=30, image_duration_
         img_path = os.path.join(input_folder, image)
         frame = cv2.imread(img_path)
         
+        # frame = debug_face_detection(frame)
+        frame = center_image_on_face(frame)
+
         # Получаем дату создания файла
         creation_time = get_file_creation_time(img_path)
         
