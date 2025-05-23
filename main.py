@@ -141,24 +141,40 @@ def add_text_to_image(image, text):
 def crop_to_vertical(image):
     height, width = image.shape[:2]
 
-    # Определяем желаемое соотношение сторон (9:16)
-    target_ratio = 9 / 16
+    # Определяем желаемое соотношение сторон (3:4)
+    target_ratio = 3 / 4
 
-    # Вычисляем новую ширину, сохраняя высоту
-    new_width = int(height * target_ratio)
+    # Вычисляем возможные размеры для обоих вариантов обрезки
+    # Вариант 1: сохраняем всю высоту, обрезаем ширину
+    width_if_keep_height = int(height * target_ratio)
+    
+    # Вариант 2: сохраняем всю ширину, обрезаем высоту  
+    height_if_keep_width = int(width / target_ratio)
 
-    # Если текущая ширина меньше нужной, увеличиваем изображение
-    if width < new_width:
-        scale = new_width / width
-        image = cv2.resize(image, (new_width, int(height * scale)))
-        height, width = image.shape[:2]
-
-    # Вычисляем координаты для обрезки по центру
-    start_x = (width - new_width) // 2
-    end_x = start_x + new_width
+    # Выбираем вариант, который не требует увеличения изображения
+    if width_if_keep_height <= width:
+        # Можем сохранить всю высоту, обрезаем ширину
+        new_width = width_if_keep_height
+        new_height = height
+        
+        # Вычисляем координаты для обрезки по ширине (по центру)
+        start_x = (width - new_width) // 2
+        end_x = start_x + new_width
+        start_y = 0
+        end_y = height
+    else:
+        # Сохраняем всю ширину, обрезаем высоту
+        new_width = width
+        new_height = height_if_keep_width
+        
+        # Вычисляем координаты для обрезки по высоте (по центру)
+        start_x = 0
+        end_x = width
+        start_y = (height - new_height) // 2
+        end_y = start_y + new_height
 
     # Обрезаем изображение
-    cropped = image[:, start_x:end_x]
+    cropped = image[start_y:end_y, start_x:end_x]
 
     return cropped
 
