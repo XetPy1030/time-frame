@@ -12,6 +12,7 @@ def get_file_creation_time(file_path):
     # Конвертируем в читаемый формат (только дата)
     return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
 
+
 def debug_face_detection(image):
     # Загружаем классификатор для обнаружения лиц
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -38,21 +39,26 @@ def debug_face_detection(image):
         thickness = 2
 
         # Горизонтальная линия
-        cv2.line(debug_image,
-                (center_x - cross_size, center_y),
-                (center_x + cross_size, center_y),
-                color, thickness)
+        cv2.line(
+            debug_image,
+            (center_x - cross_size, center_y),
+            (center_x + cross_size, center_y),
+            color, thickness,
+        )
 
         # Вертикальная линия
-        cv2.line(debug_image,
-                (center_x, center_y - cross_size),
-                (center_x, center_y + cross_size),
-                color, thickness)
+        cv2.line(
+            debug_image,
+            (center_x, center_y - cross_size),
+            (center_x, center_y + cross_size),
+            color, thickness,
+        )
 
         # Рисуем прямоугольник вокруг лица
         cv2.rectangle(debug_image, (x, y), (x + w, y + h), color, thickness)
 
     return debug_image
+
 
 def center_image_on_face(image):
     # Загружаем классификатор для обнаружения лиц
@@ -91,6 +97,7 @@ def center_image_on_face(image):
         # Если лицо не найдено, возвращаем оригинальное изображение
         return image
 
+
 def add_text_to_image(image, text):
     # Конвертируем изображение в формат для OpenCV
     if isinstance(image, np.ndarray):
@@ -116,21 +123,26 @@ def add_text_to_image(image, text):
     text_y = height - 20
 
     # Добавляем черный фон для текста
-    cv2.rectangle(img, (text_x - 10, text_y - text_size[1] - 10),
-                 (text_x + text_size[0] + 10, text_y + 10),
-                 (0, 0, 0), -1)
+    cv2.rectangle(
+        img, (text_x - 10, text_y - text_size[1] - 10),
+        (text_x + text_size[0] + 10, text_y + 10),
+        (0, 0, 0), -1,
+    )
 
     # Добавляем текст
-    cv2.putText(img, text, (text_x, text_y), font, font_scale,
-                font_color, thickness, line_type)
+    cv2.putText(
+        img, text, (text_x, text_y), font, font_scale,
+        font_color, thickness, line_type,
+    )
 
     return img
+
 
 def crop_to_vertical(image):
     height, width = image.shape[:2]
 
     # Определяем желаемое соотношение сторон (9:16)
-    target_ratio = 9/16
+    target_ratio = 9 / 16
 
     # Вычисляем новую ширину, сохраняя высоту
     new_width = int(height * target_ratio)
@@ -149,6 +161,7 @@ def crop_to_vertical(image):
     cropped = image[:, start_x:end_x]
 
     return cropped
+
 
 def add_audio_to_video(video_path, audio_path, output_path):
     """
@@ -260,7 +273,7 @@ def apply_vintage_effects(image, frame_number=0):
         cv2.line(
             sepia, (scratch_x, scratch_y),
             (scratch_x + np.random.randint(-5, 5), scratch_y + scratch_length),
-            (200, 200, 200), 1
+            (200, 200, 200), 1,
         )
 
     # 6. Уменьшаем контрастность для более мягкого вида
@@ -272,7 +285,15 @@ def apply_vintage_effects(image, frame_number=0):
     return sepia
 
 
-def create_video_from_images(input_folder, output_video, fps=30, image_duration_ms=1000, video_format='mp4', audio_file=None, vintage_effects=False):
+def create_video_from_images(
+    input_folder,
+    output_video,
+    fps=30,
+    image_duration_ms=1000,
+    video_format='mp4',
+    audio_file=None,
+    vintage_effects=False,
+):
     images = [img for img in os.listdir(input_folder) if img.endswith(('.png', '.jpg', '.jpeg'))]
     images.sort()
 
@@ -352,6 +373,7 @@ def create_video_from_images(input_folder, output_video, fps=30, image_duration_
             print(f"Аудио файл не найден: {audio_file}. Создается видео без музыки.")
         print(f"Видео успешно создано: {output_video}")
 
+
 if __name__ == "__main__":
     input_folder = "gallery"  # Папка с фотографиями
     output_video = "output_video"  # Имя выходного видео файла (без расширения)
@@ -367,4 +389,12 @@ if __name__ == "__main__":
     # vintage_effects = True               # Для создания ретро-эффектов
     # vintage_effects = False              # Для современного вида
 
-    create_video_from_images(input_folder, output_video, fps, image_duration_ms, video_format, audio_file, vintage_effects)
+    create_video_from_images(
+        input_folder,
+        output_video,
+        fps,
+        image_duration_ms,
+        video_format,
+        audio_file,
+        vintage_effects,
+    )
